@@ -1,5 +1,5 @@
 <ng-container *ngIf="user$ | async as user">
-  <nav class="bg-sky-700 border-gray-200 px-6 shadow-md">
+  <nav class="border-gray-200 px-6 shadow-md" [ngClass]="colors">
     <div class="flex flex-wrap justify-between items-center">
       <div class="flex items-center">
         <a routerLink="/app">
@@ -14,7 +14,7 @@
           <ul class="flex items-center space-x-2 text-sm font-medium">
             <li>
               <app-btn
-                color="sky"
+                [color]="navbarBackgroundColor"
                 (click)="isOpenOverlayBoards = !isOpenOverlayBoards"
                 cdkOverlayOrigin
                 #boardsOverlay="cdkOverlayOrigin"
@@ -26,10 +26,23 @@
               </app-btn>
             </li>
             <li>
-              <a routerLink="/app/users" class="block py-3 px-4 text-white">Users</a>
+              <a routerLink="/app/users" class="block py-3 px-4 text-white"
+                >Users</a
+              >
             </li>
             <li>
-              <app-btn typeBtn="button" color="sky">Create</app-btn>
+              <app-btn
+                typeBtn="button"
+                [color]="navbarBackgroundColor"
+                cdkOverlayOrigin
+                #createBoardOverlay="cdkOverlayOrigin"
+                (click)="isOpenOverlayCreateBoard = !isOpenOverlayCreateBoard"
+              >
+                <div class="flex space-x-2 text-left">
+                  <span>Create</span>
+                  <fa-icon [icon]="faAngleDown"></fa-icon>
+                </div>
+              </app-btn>
             </li>
           </ul>
         </div>
@@ -81,11 +94,7 @@
         </button>
       </div>
       <div class="py-3 px-4 flex items-center space-x-4">
-        <img
-          class="w-10 h-10 rounded-full"
-          [src]="user?.avatar"
-          alt=""
-        />
+        <img class="w-10 h-10 rounded-full" [src]="user?.avatar" alt="" />
         <div class="space-y-1">
           <div>{{ user?.name }}</div>
           <div class="text-sm text-gray-500">{{ user?.email }}</div>
@@ -120,7 +129,12 @@
       </ul>
       <ul class="py-1">
         <li>
-          <button class="block py-2 px-4 text-sm text-gray-700" (click)="logout()">Log out</button>
+          <button
+            class="block py-2 px-4 text-sm text-gray-700"
+            (click)="logout()"
+          >
+            Log out
+          </button>
         </li>
       </ul>
     </div>
@@ -148,4 +162,27 @@
     </div>
   </ng-template>
 
+  <ng-template
+    cdkConnectedOverlay
+    [cdkConnectedOverlayOrigin]="createBoardOverlay"
+    [cdkConnectedOverlayOpen]="isOpenOverlayCreateBoard"
+    (overlayOutsideClick)="isOpenOverlayCreateBoard = !isOpenOverlayCreateBoard"
+  >
+    <div
+      class="z-50 my-4 w-60 text-base list-none bg-white rounded divide-y divide-gray-100 shadow"
+    >
+      <div class="py-2 px-4 text-center relative">
+        <span class="block text-normal text-gray-900">Create new board</span>
+        <button
+          (click)="isOpenOverlayCreateBoard = !isOpenOverlayCreateBoard"
+          class="block text-sm text-gray-900 absolute right-3 top-3"
+        >
+          <fa-icon [icon]="faClose"></fa-icon>
+        </button>
+      </div>
+      <div class="py-3 px-4 flex justify-between">
+        <app-board-form (closeOverlay)="close($event)"></app-board-form>
+      </div>
+    </div>
+  </ng-template>
 </ng-container>

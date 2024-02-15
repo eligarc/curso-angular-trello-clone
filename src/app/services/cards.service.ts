@@ -2,26 +2,25 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 import { environment } from '@environments/environment';
-import { User } from '@models/user.model';
 import { checkToken } from '@interceptors/token.interceptor';
-import { Board } from '@models/Board';
+import { Card, CardDto, CreateCardDto } from '@models/card.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class MeService {
+export class CardsService {
   apiUrl = environment.API_URL;
 
   constructor(private http: HttpClient) {}
 
-  getMeProfile() {
-    return this.http.get<User>(`${this.apiUrl}/api/v1/me/profile`, {
+  createCard(card: CreateCardDto) {
+    return this.http.post<Card>(`${this.apiUrl}/api/v1/cards`, card, {
       context: checkToken(),
     });
   }
 
-  getMeBoards() {
-    return this.http.get<Board[]>(`${this.apiUrl}/api/v1/me/boards`, {
+  update(id: Card['id'], changes: CardDto) {
+    return this.http.put(`${this.apiUrl}/api/v1/cards/${id}`, changes, {
       context: checkToken(),
     });
   }

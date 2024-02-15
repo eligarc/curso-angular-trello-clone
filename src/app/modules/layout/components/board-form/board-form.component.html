@@ -1,0 +1,67 @@
+<form [formGroup]="form" novalidate class="space-y-4" (ngSubmit)="doSave()">
+  <div>
+    <div class="flex flex-wrap">
+      <div class="flex items-center me-4">
+        <input
+          id="sky-radio"
+          type="radio"
+          value="sky"
+          name="backgroundColor"
+          formControlName="backgroundColor"
+          class="hidden peer"
+        />
+        <label
+          for="sky-radio"
+          class="inline-flex items-center justify-center w-8 h-8 text-transparent border border-gray-200 rounded cursor-pointer bg-sky-700 hover:bg-sky-500 peer-checked:text-white"
+        >
+          <fa-icon [icon]="faCheck"></fa-icon>
+        </label>
+      </div>
+      <div class="flex items-center me-4">
+        <input
+          id="yellow-radio"
+          type="radio"
+          value="yellow"
+          name="backgroundColor"
+          formControlName="backgroundColor"
+          class="hidden peer"
+        />
+        <label
+          for="yellow-radio"
+          class="inline-flex items-center justify-center w-8 h-8 text-transparent border border-gray-200 rounded cursor-pointer bg-yellow-700 hover:bg-yellow-500 peer-checked:text-white"
+        >
+          <fa-icon [icon]="faCheck"></fa-icon>
+        </label>
+      </div>
+      <div class="flex items-center me-4">
+        <input
+          id="red-radio"
+          type="radio"
+          value="red"
+          name="backgroundColor"
+          formControlName="backgroundColor"
+          class="hidden peer"
+        />
+        <label
+          for="red-radio"
+          class="inline-flex items-center justify-center w-8 h-8 text-transparent border border-gray-200 rounded cursor-pointer bg-red-700 hover:bg-red-500 peer-checked:text-white"
+        >
+          <fa-icon [icon]="faCheck"></fa-icon>
+        </label>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="relative">
+      <input
+        formControlName="title"
+        placeholder="Enter title"
+        type="text"
+        class="w-full rounded bg-gray-100 border-gray-300 border-2"
+      />
+    </div>
+  </div>
+  <div>
+    <app-btn typeBtn="submit" color="success">Create</app-btn>
+  </div>
+</form>

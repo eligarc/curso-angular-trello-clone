@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { FormBuilder, FormControl } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   CdkDragDrop,
   moveItemInArray,
@@ -6,8 +8,15 @@ import {
 } from '@angular/cdk/drag-drop';
 import { Dialog } from '@angular/cdk/dialog';
 import { TodoDialogComponent } from '@boards/components/todo-dialog/todo-dialog.component';
+import { BoardsService } from './../../../../services/boards.service';
 
-import { ToDo, Column } from '@models/todo.model';
+// import { ToDo, Column } from '@models/todo.model';
+import { Board } from '@models/Board';
+import { Card } from '@models/card.model';
+import { CardsService } from '@services/cards.service';
+import { List } from '@models/list.model';
+import { ListsService } from '@services/list.service';
+import { BACKGROUND_COLORS } from '@models/colors.model';
 
 @Component({
   selector: 'app-board',
@@ -23,44 +32,56 @@ import { ToDo, Column } from '@models/todo.model';
     `,
   ],
 })
-export class BoardComponent {
-  columns: Column[] = [
-    {
-      title: 'ToDo',
-      todos: [
-        {
-          id: '1',
-          title: 'Make dishes',
-        },
-        {
-          id: '2',
-          title: 'Buy a unicorn',
-        },
-      ],
-    },
-    {
-      title: 'Doing',
-      todos: [
-        {
-          id: '3',
-          title: 'Watch Angular Path in Platzi',
-        },
-      ],
-    },
-    {
-      title: 'Done',
-      todos: [
-        {
-          id: '4',
-          title: 'Play video games',
-        },
-      ],
-    },
-  ];
+export class BoardComponent implements OnInit, OnDestroy {
+  board: Board | null = null;
+  inputCard = new FormControl<string>('', {
+    nonNullable: true,
+    validators: [],
+  });
+  showListForm = false;
+  inputList = new FormControl<string>('', {
+    nonNullable: true,
+    validators: [],
+  });
+  // formCard = this.formBuilder.nonNullable.group({
 
-  constructor(private dialog: Dialog) {}
+  // });
+  colorBackgrounds = BACKGROUND_COLORS;
 
-  drop(event: CdkDragDrop<ToDo[]>) {
+  constructor(
+    private dialog: Dialog,
+    private activatedRoute: ActivatedRoute,
+    private boardsService: BoardsService,
+    private cardsService: CardsService,
+    private formBuilder: FormBuilder,
+    private listsService: ListsService
+  ) {}
+
+
+  ngOnDestroy(): void {
+    this.boardsService.setBackgroudColor('sky');
+  }
+
+  ngOnInit() {
+    this.activatedRoute.paramMap.subscribe((params) => {
+      const boardId = params.get('boardId');
+      // console.log(boardId);
+
+      if (boardId) {
+        this.getBoard(boardId);
+      }
+    });
+  }
+
+  private getBoard(id: string) {
+    this.boardsService.getBoardById(id).subscribe((board) => {
+      console.log(board);
+      this.board = board;
+      this.boardsService.setBackgroudColor(board.backgroundColor);
+    });
+  }
+
+  drop(event: CdkDragDrop<Card[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(
         event.container.data,
@@ -75,21 +96,51 @@ export class BoardComponent {
         event.currentIndex
       );
     }
+    // after
+    const position = this.boardsService.getPosition(
+      event.container.data,
+      event.currentIndex
+    );
+    const card = event.container.data[event.currentIndex];
+
+    console.log(position);
+    console.log(card);
+    const listId = event.container.id;
+
+    this.updateCard(card, position, listId);
   }
 
-  addColumn() {
-    this.columns.push({
-      title: 'New Column',
-      todos: [],
-    });
+  private updateCard(card: Card, position: number, listId: string) {
+    this.cardsService
+      .update(card.id, { position, listId })
+      .subscribe((cardUpdated) => {
+        console.log(cardUpdated);
+      });
   }
 
-  openDialog(todo: ToDo) {
+  addList() {
+    const title = this.inputList.getRawValue();
+    if (this.board) {
+      this.listsService
+        .create({
+          title,
+          boardId: this.board.id,
+          position: this.boardsService.getPositonNewItem(this.board.lists),
+        })
+        .subscribe((list) => {
+          this.board?.lists.push({ ...list, cards: [] });
+          this.showListForm = false;
+          this.inputList.reset();
+        });
+    }
+  }
+
+  openDialog(card: Card) {
     const dialogRef = this.dialog.open(TodoDialogComponent, {
       minWidth: '300px',
       maxWidth: '50%',
       data: {
-        todo: todo,
+        card: card,
       },
     });
     dialogRef.closed.subscribe((output) => {
@@ -97,5 +148,51 @@ export class BoardComponent {
         console.log(output);
       }
     });
+  }
+
+  openFormCard(list: List) {
+    // list.showCardForm = !list.showCardForm
+    // 1.- List: false => todos
+    // 2.- List: click => true
+    if (this.board?.lists) {
+      this.board.lists = this.board.lists.map((l) => ({
+        ...l,
+        showCardForm: l.id === list.id,
+      }));
+    }
+  }
+
+  createCard(list: List) {
+    const title = this.inputCard.getRawValue();
+
+    if (this.board) {
+      this.cardsService
+        .createCard({
+          title,
+          listId: list.id,
+          boardId: this.board.id,
+          position: this.boardsService.getPositonNewItem(list.cards),
+        })
+        .subscribe((card) => {
+          console.log(card);
+          list.cards.push(card);
+          this.inputCard.reset();
+          list.showCardForm = false;
+        });
+    }
+  }
+
+  closeCardForm(list: List) {
+    list.showCardForm = false;
+  }
+
+  get colors() {
+    if (this.board) {
+      const clases = this.colorBackgrounds[this.board.backgroundColor];
+
+      return clases || {};
+    }
+
+    return {};
   }
 }
